@@ -18,5 +18,14 @@ def load_data(path: str, csv_delimeter=","):
 
 def save_data(df: pd.DataFrame, path: str):
     """Save data to path"""
-    Path(path).parent.mkdir(exist_ok=True)
-    df.to_pickle(path)
+    file_path = Path(path)
+    file_path.parent.mkdir(exist_ok=True)
+
+    if file_path.suffix == ".csv":
+        df.to_csv(file_path, index=False)
+    elif file_path.suffix == ".pkl":
+        df.to_pickle(file_path)
+    else:
+        raise ValueError("File format not supported. Please use a CSV or PKL file.")
+    
+    

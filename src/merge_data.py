@@ -24,6 +24,9 @@ def merge_files(csv_files: list):
 def merge_data(config: DictConfig):
     csv_files = get_files_in_a_directory(config.data.raw.dir)
     merged_df = merge_files(csv_files)
+    print(f'{csv_files=}')
+    print(f'{merged_df.shape=}')
+    print('merge path', config.data.merged.path)
     save_data(merged_df, config.data.merged.path)
 
 

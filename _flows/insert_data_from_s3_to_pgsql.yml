@@ -1,7 +1,7 @@
-id: run_ml_pipeline
+id: insert_data_from_s3_to_pgsql
 namespace: dev2
 tasks:
-  - id: run_python_commands 
+  - id: get_merge_data_from_s3 
     type: io.kestra.plugin.scripts.python.Commands
     namespaceFiles:
       enabled: true
@@ -14,19 +14,34 @@ tasks:
     commands:
       - python src/download_files_from_s3.py
       - python src/merge_data.py
-      - python src/process.py
-      - python src/train.py
     outputFiles:
-      - "model/*.pkl"
       - "data/merged/*.csv"
 
-  - id: clear_refrence_table
+
+   # Step 2: Create PostgreSQL table if not exists
+  - id: create_pgsql_table
     type: io.kestra.plugin.jdbc.postgresql.Query
     url: jdbc:postgresql://detect-data-drift-pipeline-postgres-1:5432/
     username: "kestra"
     password: "k3str4"
     sql: |
-      TRUNCATE TABLE reference_data;
+      CREATE TABLE IF NOT EXISTS reference_data (
+          col_0 double precision,
+          col_1 double precision,
+          col_2 double precision,
+          col_3 double precision,
+          col_4 double precision,
+          quality bigint
+      );
+
+      CREATE TABLE IF NOT EXISTS current_data (
+          col_0 double precision,
+          col_1 double precision,
+          col_2 double precision,
+          col_3 double precision,
+          col_4 double precision,
+          quality bigint
+      );
 
   - id: saveToCurrentTable
     type: io.kestra.plugin.jdbc.postgresql.CopyIn
@@ -37,27 +52,4 @@ tasks:
     format: CSV
     delimiter: ","
     header: true
-    from: "{{outputs.run_python_commands.outputFiles['data/merged/merged.csv']}}"
-
-
-  - id: upload
-    type: io.kestra.plugin.aws.s3.Upload
-    accessKeyId: "{{kv('AWS_ACCESS_KEY_ID')}}"
-    secretKeyId: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
-    region: us-east-1
-    from: '{{outputs.run_python_commands.outputFiles["model/model.pkl"]}}'
-    bucket: kestra-mlops-demo
-    key: model.pkl
-triggers:
-  - id: watch
-    type: io.kestra.plugin.aws.s3.Trigger
-    interval: PT1S
-    accessKeyId: "{{kv('AWS_ACCESS_KEY_ID')}}"
-    secretKeyId: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
-    region: us-east-1
-    bucket: kestra-mlops-demo
-    prefix: new
-    action: MOVE
-    moveTo:
-      bucket: kestra-mlops-demo
-      key: old
+    from: "{{outputs.get_merge_data_from_s3.outputFiles['data/merged/merged.csv']}}"
