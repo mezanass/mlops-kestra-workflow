@@ -6,8 +6,8 @@ tasks:
     namespaceFiles:
       enabled: true
     env:
-      AWS_ACCESS_KEY_ID: "{{secret('AWS_ACCESS_KEY_ID')}}"
-      AWS_SECRET_ACCESS_KEY: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
+      AWS_ACCESS_KEY_ID: "{{kv('AWS_ACCESS_KEY_ID')}}"
+      AWS_SECRET_ACCESS_KEY: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
     docker:
       image: ghcr.io/kestra-io/pydata:latest
     beforeCommands:
@@ -16,13 +16,13 @@ tasks:
       - python src/download_files_from_s3.py
       - python src/merge_data.py
       - python src/process.py
-      - python src/train.py model_path=model/model.pkl
+      - python src/train.py
     outputFiles:
       - "*.pkl"
   - id: upload
     type: io.kestra.plugin.aws.s3.Upload
-    accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
-    secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
+    accessKeyId: "{{kv('AWS_ACCESS_KEY_ID')}}"
+    secretKeyId: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
     region: us-east-1
     from: '{{outputs.run_python_commands.outputFiles["model/model.pkl"]}}'
     bucket: kestra-mlops-demo
@@ -31,8 +31,8 @@ triggers:
   - id: watch
     type: io.kestra.plugin.aws.s3.Trigger
     interval: PT1S
-    accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
-    secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
+    accessKeyId: "{{kv('AWS_ACCESS_KEY_ID')}}"
+    secretKeyId: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
     region: us-east-1
     bucket: kestra-mlops-demo
     prefix: new
