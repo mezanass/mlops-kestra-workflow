@@ -23,9 +23,9 @@ tasks:
     type: io.kestra.plugin.aws.s3.Upload
     accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
     secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
-    region: us-east-2
+    region: us-east-1
     from: '{{outputs.run_python_commands.outputFiles["model/model.pkl"]}}'
-    bucket: winequality-red
+    bucket: kestra-mlops-demo
     key: model.pkl
 triggers:
   - id: watch
@@ -33,10 +33,10 @@ triggers:
     interval: PT1S
     accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
     secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
-    region: us-east-2
-    bucket: winequality-red
+    region: us-east-1
+    bucket: kestra-mlops-demo
     prefix: new
     action: MOVE
     moveTo:
-      bucket: winequality-red
+      bucket: kestra-mlops-demo
       key: old
