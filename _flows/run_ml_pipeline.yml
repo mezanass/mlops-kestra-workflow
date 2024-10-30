@@ -1,5 +1,5 @@
 id: run_ml_pipeline
-namespace: dev
+namespace: dev2
 tasks:
   - id: run_python_commands 
     type: io.kestra.plugin.scripts.python.Commands

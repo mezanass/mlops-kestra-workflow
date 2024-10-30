@@ -1,10 +1,10 @@
 id: sync_from_git
-namespace: dev
+namespace: dev2
 
 tasks:
   - id: git
     type: io.kestra.plugin.git.Sync
-    url: https://github.com/khuyentran1401/mlops-kestra-workflow
+    url: https://github.com/mezanass/mlops-kestra-workflow.git
     branch: main
     username: "{{secret('GITHUB_USERNAME')}}"
     password: "{{secret('GITHUB_PASSWORD')}}"

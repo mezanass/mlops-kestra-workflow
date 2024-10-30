@@ -26,6 +26,7 @@ def download_data_from_s3(s3, config: DictConfig):
     objects = s3.list_objects_v2(Bucket=config.bucket, Prefix=config.prefix)
 
     # List objects
+    print(len(objects.get("Contents", [])))
     for obj in objects.get("Contents", []):
         if obj["Key"].endswith(".csv"):
             # Construct the full local file path
