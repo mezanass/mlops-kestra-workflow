@@ -34,6 +34,16 @@ tasks:
           - python src/detect_data_drift.py 
         outputFiles:
           - "data/final/*.csv"
+          - "drift_report.json"
+
+      - id: upload
+        type: io.kestra.plugin.aws.s3.Upload
+        region: us-east-1
+        accessKeyId: "{{kv('AWS_ACCESS_KEY_ID')}}"
+        secretKeyId: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
+        bucket: kestra-mlops-demo
+        from: "{{outputs.get_current_data.outputFiles[\"drift_report.json\"]}}"
+        key: drift_report.json
 
 # triggers:
 #   - id: schedule
