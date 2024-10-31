@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 import boto3
@@ -9,7 +10,7 @@ from omegaconf import DictConfig
 def get_s3_client():
     aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
     aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-    print(f'{aws_access_key_id=}', f'{aws_secret_access_key=}')
+    # print(f'{aws_access_key_id=}', f'{aws_secret_access_key=}')
     s3 = boto3.client(
         "s3",
         aws_access_key_id=aws_access_key_id,
@@ -32,7 +33,7 @@ def download_data_from_s3(s3, config: DictConfig):
         if obj["Key"].endswith(".csv"):
             # Construct the full local file path
             local_file_path = local_directory / Path(obj["Key"]).name
-
+            print(f'{local_file_path=}')
             # Download the file
             s3.download_file(config.bucket, obj["Key"], str(local_file_path))
             print(f"Downloaded {obj['Key']} to {local_file_path}")
@@ -42,7 +43,9 @@ def download_data_from_s3(s3, config: DictConfig):
 def download_s3_file(config: DictConfig):
     print("Downloading old data from S3...")
     s3 = get_s3_client()
-    download_data_from_s3(s3, config.s3.raw.old)
+    time.sleep(2)
+    print(f'{config.prefix=}')
+    download_data_from_s3(s3, getattr(config.s3.raw, config.prefix))
 
 
 if __name__ == "__main__":

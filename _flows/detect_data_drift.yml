@@ -1,0 +1,41 @@
+id: detect-data-drift
+namespace: dev2
+tasks:
+  - id: getReferenceTable
+    type: io.kestra.plugin.jdbc.postgresql.CopyOut
+    url: jdbc:postgresql://detect-data-drift-pipeline-postgres-1:5432/
+    username: kestra
+    password: k3str4
+    format: CSV
+    header: true
+    sql: SELECT * FROM reference_data
+  
+  - id: wdir
+    type: io.kestra.core.tasks.flows.WorkingDirectory
+    tasks:
+      - id: saveReferenceToCSV
+        type: io.kestra.core.tasks.storages.LocalFiles
+        inputs:
+          data/final/reference.csv: "{{outputs.getReferenceTable.uri}}"
+        
+      - id: get_current_data 
+        type: io.kestra.plugin.scripts.python.Commands
+        namespaceFiles:
+          enabled: true
+        env:
+          AWS_ACCESS_KEY_ID: "{{kv('AWS_ACCESS_KEY_ID')}}"
+          AWS_SECRET_ACCESS_KEY: "{{kv('AWS_SECRET_ACCESS_KEY')}}"
+        containerImage: civisanalytics/datascience-python:latest
+        beforeCommands:
+          - pip install -r requirements.txt
+        commands:
+          - python src/download_files_from_s3.py prefix=detect
+          - python src/merge_data.py prefix=detect
+          - python src/detect_data_drift.py 
+        outputFiles:
+          - "data/final/*.csv"
+
+# triggers:
+#   - id: schedule
+#     type: io.kestra.core.models.triggers.types.Schedule
+#     cron: 0 11 * * MON

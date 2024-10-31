@@ -3,3 +3,5 @@ pandas
 pyarrow
 scikit-learn
 boto3
+evidently
+kestra
