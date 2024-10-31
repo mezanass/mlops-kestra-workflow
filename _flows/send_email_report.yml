@@ -1,0 +1,36 @@
+id: send-email-report
+namespace: dev2
+tasks:
+  - id: download_s3_file
+    type: io.kestra.plugin.aws.s3.Download
+    description: "Download a file from S3"
+    bucket: "kestra-mlops-demo"
+    key: "drift_report.json"  
+    accessKeyId: "{{ kv('AWS_ACCESS_KEY_ID') }}"
+    secretKeyId: "{{ kv('AWS_SECRET_ACCESS_KEY') }}"
+    region: us-east-1  
+ 
+  - id: send_email
+    type: io.kestra.plugin.notifications.mail.MailSend
+    host: smtp.resend.com
+    port: 465
+    username: resend
+    password: "{{ kv('RESEND_SECRET_KEY') }}"
+    from: onboardin@resend.dev
+    to: "{{ kv('PERSONAL_EMAIL') }}"
+    subject: Data Drift Report
+    htmlTextContent: data drift was detected
+    attachments:
+    - name: drift_report.json
+      uri: "{{ outputs.download_s3_file[\"uri\"] }}"
+
+        
+triggers:
+  - id: listen
+    type: io.kestra.core.models.triggers.types.Flow
+    conditions:
+      - type: io.kestra.core.models.conditions.types.ExecutionFlowCondition
+        namespace: dev2
+        flowId: detect-data-drift
+      - type: io.kestra.core.models.conditions.types.VariableCondition
+        expression: "{{ outputs.get_current_data[\"vars\"][\"drift_detected\"] }} == true"
